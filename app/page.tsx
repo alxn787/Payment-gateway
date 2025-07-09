@@ -8,7 +8,7 @@ import ProductCard from './components/ProductCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import prisma from '@/prisma';
+import axios from 'axios';
 
 type Inventory = {
   id: string;
@@ -30,7 +30,8 @@ const Home = () => {
 
   async function getInventory() {
 
-    const inventory:Inventory[] = axios
+    const response = await axios.get('/api/inventory/')
+    const inventory: Inventory[] = response.data.data;
     setInventory(inventory);
     console.log(inventory);
   }
