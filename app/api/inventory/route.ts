@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 interface ProductInput {
     id: string;
     name: string;
-    price: number;
+    price: number; // Float
     stock: number;
     image: string;
 }

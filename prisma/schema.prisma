@@ -37,14 +37,14 @@ model Order {
 model PartialKey {
   id             String      @id @default(uuid())
   userId         String
-  key      String
+  key            String
   user           User        @relation(fields: [userId], references: [id])
 }
 
 model Inventory {
   id             String      @id @default(uuid())
   name           String
-  price          Int
-  stock         Int
+  price          Float
+  stock          Int
   image          String
 }

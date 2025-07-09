@@ -42,7 +42,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         
         <div className="flex items-center justify-between mb-3">
           <span className="text-2xl font-bold bg-gradient-to-r from-gray-300 to-white bg-clip-text text-transparent">
-            ${product.price}
+            ${product.price.toFixed(5)}
           </span>
           <span className="text-sm text-gray-400">
             Stock: {product.stock}
