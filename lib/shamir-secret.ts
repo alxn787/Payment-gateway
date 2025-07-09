@@ -2,21 +2,24 @@
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import * as sss from "shamirs-secret-sharing";
 import CryptoJS from "crypto-js";
-import Redis from "ioredis";
+import { Redis } from '@upstash/redis'
+
 
 const MPC_CONFIG = {
   THRESHOLD: 3,
   TOTAL_SHARES: 3,
   ENCRYPTION_KEY:
     process.env.MPC_ENCRYPTION_KEY || "default-key-change-in-production",
-  REDIS_URL_1: process.env.REDIS_URL_1 || "redis://localhost:6379",
-  REDIS_URL_2: process.env.REDIS_URL_2 || "redis://localhost:6379",
+  REDIS_URL_1: process.env.REDIS_URL_1 ,
+  REDIS_URL_2: process.env.REDIS_URL_2 ,
+  REDIS_TOKEN_1: process.env.REDIS_TOKEN_1 ,
+  REDIS_TOKEN_2: process.env.REDIS_TOKEN_2 ,
   SHARE_TTL_DAYS: 30,
   ROTATION_WARNING_DAYS: 7,
 };
 
-const redis1 = new Redis(MPC_CONFIG.REDIS_URL_1);
-const redis2 = new Redis(MPC_CONFIG.REDIS_URL_2);
+const redis1 = new Redis({url:MPC_CONFIG.REDIS_URL_1, token:MPC_CONFIG.REDIS_TOKEN_1});
+const redis2 = new Redis({url:MPC_CONFIG.REDIS_URL_2, token:MPC_CONFIG.REDIS_TOKEN_2});
 
 export interface KeyShare {
   shareIndex: number;
@@ -110,7 +113,7 @@ export async function recoverMissingShares(
     availableShares.push(Buffer.from(decryptedShare1, "hex"));
 
     try {
-      const encryptedShare2 = await redis1.get(redisKey2);
+      const encryptedShare2 = await redis1.get<string>(redisKey2);
       if (encryptedShare2) {
         const decryptedShare2 = decryptData(
           encryptedShare2,
@@ -123,7 +126,7 @@ export async function recoverMissingShares(
     }
 
     try {
-      const encryptedShare3 = await redis2.get(redisKey3);
+      const encryptedShare3 = await redis2.get<string>(redisKey3);
       if (encryptedShare3) {
         const decryptedShare3 = decryptData(
           encryptedShare3,
@@ -254,7 +257,7 @@ export async function reconstructPrivateKey(
 
     // Get Share 2 from Redis 1
     const redisKey2 = `mpc:share:${userId}:2`;
-    const encryptedShare2 = await redis1.get(redisKey2);
+    const encryptedShare2 = await redis1.get<string>(redisKey2);
 
     if (!encryptedShare2) {
       throw new Error(
@@ -270,7 +273,7 @@ export async function reconstructPrivateKey(
 
     // Get Share 3 from Redis 2
     const redisKey3 = `mpc:share:${userId}:3`;
-    const encryptedShare3 = await redis2.get(redisKey3);
+    const encryptedShare3 = await redis2.get<string>(redisKey3);
 
     if (!encryptedShare3) {
       throw new Error(

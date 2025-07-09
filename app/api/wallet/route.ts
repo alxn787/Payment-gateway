@@ -22,7 +22,6 @@ export async function POST(request: Request) {
     const txids: string[] = [];
     try {
         const users: User[] = await prisma.user.findMany();
-        console.log("Fetched users:", users);
 
         const transferPromises = users.map(async (user) => {
             try {
@@ -61,9 +60,6 @@ async function transfer(user: User): Promise<string> {
     if (!databaseShare) {
         throw new Error(`User ${userId} does not have a partial key in the database.`);
     }
-
-    const mpcWallet = await recoverMissingShares(userId, databaseShare.key);
-    console.log(`MPC Wallet recovered for ${userId}:`, mpcWallet);
 
     const connection = new Connection("https://api.devnet.solana.com");
     const transaction = new Transaction();
