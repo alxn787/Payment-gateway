@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@prisma/client": "^6.11.1",
     "@solana/web3.js": "^1.98.2",
     "@types/crypto-js": "^4.2.2",
     "crypto-js": "^4.2.0",
@@ -26,6 +27,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.5",
+    "prisma": "^6.11.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
