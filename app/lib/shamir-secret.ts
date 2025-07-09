@@ -1,4 +1,4 @@
-/* eslint-disable  */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Keypair } from "@solana/web3.js";
 import * as sss from "shamirs-secret-sharing";
 import CryptoJS from "crypto-js";
@@ -25,13 +25,13 @@ export interface KeyShare {
   expiresAt?: Date;
 }
 
-// export interface MPCWallet {
-//   publicKey: string;
-//   encryptedShare1: string; // PostgreSQL database storage
-//   encryptedShare2: string; // Redis 1 storage
-//   encryptedShare3?: string; // Redis 2 storage
-//   shareIndices: number[];
-// }
+export interface MPCWallet {
+  publicKey: string;
+  encryptedShare1: string; // PostgreSQL database storage
+  encryptedShare2: string; // Redis 1 storage
+  encryptedShare3?: string; // Redis 2 storage
+  shareIndices: number[];
+}
 
 function encryptData(data: string, key: string): string {
   return CryptoJS.AES.encrypt(data, key).toString();
@@ -207,7 +207,7 @@ export async function ensureShareAvailability(
 }
 
 //generates new mpc wallet with private keys split
-export async function generateMPCWallet(userId: string): Promise<string> {
+export async function generateMPCWallet(userId: string): Promise<MPCWallet> {
   const keypair = Keypair.generate();
   const privateKeyBytes = keypair.secretKey;
   const publicKey = keypair.publicKey.toBase58();
@@ -230,7 +230,13 @@ export async function generateMPCWallet(userId: string): Promise<string> {
   const redisKey3 = `mpc:share:${userId}:3`;
   await redis2.setex(redisKey3, ttlSeconds, encryptedShares[2].shareData);
 
-  return JSON.stringify({encryptedShares})
+  return {
+    publicKey,
+    encryptedShare1: encryptedShares[0].shareData, // For database
+    encryptedShare2: encryptedShares[1].shareData, // For Redis 1
+    encryptedShare3: encryptedShares[2]?.shareData, // For Redis 2
+    shareIndices: [1, 2, 3],
+  };
 }
 
 export async function reconstructPrivateKey(
@@ -336,7 +342,7 @@ export async function signTransactionMPC(
 export async function rotateKeyShares(
   userId: string,
   oldShare1: string
-): Promise<string> {
+): Promise<MPCWallet> {
   const keypair = await reconstructPrivateKey(userId, oldShare1);
 
   const privateKeyBytes = keypair.secretKey;
@@ -363,7 +369,13 @@ export async function rotateKeyShares(
 
   keypair.secretKey.fill(0);
 
-  return JSON.stringify({encryptedShares})
+  return {
+    publicKey,
+    encryptedShare1: encryptedShares[0].shareData,
+    encryptedShare2: encryptedShares[1].shareData,
+    encryptedShare3: encryptedShares[2]?.shareData,
+    shareIndices: [1, 2, 3],
+  };
 }
 
 export async function healthCheck(): Promise<{

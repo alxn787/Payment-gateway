@@ -1,7 +1,6 @@
 import prisma from "@/prisma";
 import { Account, Profile, Session, User } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { Keypair } from "@solana/web3.js";
 import { JWT } from "next-auth/jwt";
 import { generateMPCWallet } from "./shamir-secret";
 
@@ -11,7 +10,6 @@ export interface CustomSession extends Session {
     email?: string | null;
     image?: string | null;
     uid: string;
-    publicKey: string;
   };
 }
 export const authConfig = {
@@ -27,7 +25,6 @@ export const authConfig = {
       const newSession = session as CustomSession;
       if (newSession.user && token.uid && token.publicKey) {
         newSession.user.uid = token.uid;
-        newSession.user.publicKey = token.publicKey;
       }
       return newSession;
     },
@@ -74,7 +71,7 @@ export const authConfig = {
         }
 
         try {
-          const mpcWallet = await generateMPCWallet(account.providerAccountId);
+          const mpcWallet = await generateMPCWallet(email);
 
           await prisma.user
             .create({
@@ -85,16 +82,13 @@ export const authConfig = {
                 // @ts-ignore
                 profilePicture: profile?.picture,
               },
-            })
-            .then(async (user) => {
-              await prisma.user.update({
-                where: { id: user.id },
-                data: {
-                  solWalletId: user.solWallet?.id,
-                  inrWalletId: user.inrWallet?.id,
-                },
-              });
-            });
+          })
+          await prisma.partialKey.create({
+            data: {
+              userId: user.id,
+              key: mpcWallet.encryptedShare1,
+            },
+          }) 
           return true;
         } catch (error) {
           console.error("Failed to create MPC wallet:", error);
