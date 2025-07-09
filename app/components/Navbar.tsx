@@ -31,7 +31,7 @@ const Navbar = ({ isSignedIn = false, userName = "Guest" }: NavbarProps) => {
           {/* Left side */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <img src={image} alt="user" className="h-8 w-8 rounded-full" /><span>{session?.data?.user?.name}</span>
+              <img src={image} alt="user" className="h-8 w-8 rounded-full" /><span className='text-zinc-300'>{session?.data?.user?.name}</span>
             </div>
           </div>
 
