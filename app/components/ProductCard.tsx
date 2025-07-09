@@ -1,7 +1,10 @@
-"use client"
+"use client";
+
 import { ShoppingCart, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import axios from 'axios';
+import { useState, useCallback } from 'react';
 
 interface Product {
   id: string;
@@ -16,6 +19,20 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
+  const [isBuying, setIsBuying] = useState(false);
+
+  const handleBuy = useCallback(async () => {
+    setIsBuying(true);
+    try {
+      const response = await axios.post('/api/buy', { productId: product.id });
+      console.log('Buy successful:', response.data);
+    } catch (error) {
+      console.error('Error buying product:', error);
+    } finally {
+      setIsBuying(false);
+    }
+  }, [product.id]);
+
   return (
     <Card className="bg-gradient-to-br from-gray-900 to-black border-gray-800/30 hover:border-gray-600/50 transition-all duration-300 hover:shadow-lg hover:shadow-gray-500/20 overflow-hidden">
       <div className="aspect-square overflow-hidden">
@@ -25,7 +42,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
         />
       </div>
-      
+
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center space-x-1">
@@ -35,11 +52,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </div>
           <span className="text-sm text-gray-400">(50 reviews)</span>
         </div>
-        
+
         <h3 className="text-white font-semibold text-lg mb-2 line-clamp-2">
           {product.name}
         </h3>
-        
+
         <div className="flex items-center justify-between mb-3">
           <span className="text-2xl font-bold bg-gradient-to-r from-gray-300 to-white bg-clip-text text-transparent">
             ${product.price.toFixed(5)}
@@ -48,13 +65,20 @@ const ProductCard = ({ product }: ProductCardProps) => {
             Stock: {product.stock}
           </span>
         </div>
-        
-        <Button 
+
+        <Button
           className="w-full bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 text-white font-medium cursor-pointer"
-          disabled={product.stock === 0}
+          onClick={handleBuy}
+          disabled={product.stock === 0 || isBuying}
         >
-          <ShoppingCart className="h-4 w-4 mr-2" />
-          {product.stock === 0 ? 'Out of Stock' : 'Buy Now'}
+          {isBuying ? (
+            'Processing...'
+          ) : (
+            <>
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              {product.stock === 0 ? 'Out of Stock' : 'Buy Now'}
+            </>
+          )}
         </Button>
       </CardContent>
     </Card>

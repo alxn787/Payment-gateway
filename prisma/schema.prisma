@@ -28,7 +28,7 @@ model User {
 model Order {
   id             String      @id @default(uuid())
   userId         String
-  amount         Int
+  amount         Float
   Signature      String
   paymentStatus  String
   user           User        @relation(fields: [userId], references: [id])
