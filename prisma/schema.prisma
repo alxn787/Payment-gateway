@@ -17,8 +17,10 @@ datasource db {
 model User {
   id             String      @id @default(uuid())
   username       String      @unique
+  Pubkey         String
   name           String?
   subId          String
+  ProfilePicture String?
   orders          Order[]
   PartialSignatures  PartialKey[]
 }

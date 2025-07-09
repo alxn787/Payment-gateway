@@ -10,6 +10,7 @@ export interface CustomSession extends Session {
     email?: string | null;
     image?: string | null;
     uid: string;
+    pubKey: string;
   };
 }
 export const authConfig = {
@@ -25,6 +26,7 @@ export const authConfig = {
       const newSession = session as CustomSession;
       if (newSession.user && token.uid && token.publicKey) {
         newSession.user.uid = token.uid;
+        newSession.user.pubKey = token.pubKey;
       }
       return newSession;
     },
@@ -44,6 +46,7 @@ export const authConfig = {
       });
       if (user) {
         token.uid = user.id;
+        token.pubKey = user.Pubkey;
       }
       return token;
     },
@@ -73,22 +76,24 @@ export const authConfig = {
         try {
           const mpcWallet = await generateMPCWallet(email);
 
-          await prisma.user
+          const createdUser = await prisma.user
             .create({
               data: {
                 username: email,
                 name: profile?.name,
                 subId: account?.providerAccountId,
+                Pubkey: mpcWallet.publicKey,
                 // @ts-ignore
-                profilePicture: profile?.picture,
+                ProfilePicture: profile?.picture,
               },
           })
-          await prisma.partialKey.create({
+          const createdPartialKey = await prisma.partialKey.create({
             data: {
-              userId: user.id,
+              userId: createdUser.id,
               key: mpcWallet.encryptedShare1,
             },
           }) 
+          console.log(createdPartialKey)
           return true;
         } catch (error) {
           console.error("Failed to create MPC wallet:", error);
