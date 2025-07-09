@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Keypair } from "@solana/web3.js";
+import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import * as sss from "shamirs-secret-sharing";
 import CryptoJS from "crypto-js";
 import Redis from "ioredis";
@@ -96,7 +96,6 @@ export async function recoverMissingShares(
   userId: string,
   databaseShare: string
 ): Promise<{ share2: string; share3: string }> {
-  console.log(`Recovering missing shares for user ${userId}`);
 
   try {
     const redisKey2 = `mpc:share:${userId}:2`;
@@ -195,7 +194,6 @@ export async function ensureShareAvailability(
     await redis1.setex(redisKey2, ttlSeconds, recoveredShares.share2);
     await redis2.setex(redisKey3, ttlSeconds, recoveredShares.share3);
 
-    console.log(`Successfully refreshed shares for user ${userId}`);
     return true;
   } catch (error) {
     console.error(
@@ -319,15 +317,16 @@ export async function validateShares(
 
 export async function signTransactionMPC(
   userId: string,
-  transaction: any,
+  transaction: Transaction,
   encryptedShare1: string // From database - other shares fetched automatically
 ): Promise<any> {
   let keypair: Keypair | null = null;
 
   try {
     keypair = await reconstructPrivateKey(userId, encryptedShare1);
-
-    transaction.sign([keypair]);
+    transaction.feePayer = new PublicKey(keypair.publicKey.toBase58());
+     transaction.sign(keypair);
+     const signature = transaction.signatures[0].signature;
 
     return transaction;
   } finally {

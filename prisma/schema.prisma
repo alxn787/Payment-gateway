@@ -40,3 +40,11 @@ model PartialKey {
   key      String
   user           User        @relation(fields: [userId], references: [id])
 }
+
+model Inventory {
+  id             String      @id @default(uuid())
+  name           String
+  price          Int
+  stock         Int
+  image          String
+}

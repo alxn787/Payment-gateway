@@ -93,7 +93,6 @@ export const authConfig = {
               key: mpcWallet.encryptedShare1,
             },
           }) 
-          console.log(createdPartialKey)
           return true;
         } catch (error) {
           console.error("Failed to create MPC wallet:", error);
