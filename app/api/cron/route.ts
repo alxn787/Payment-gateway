@@ -140,11 +140,14 @@ async function transfer(user: User): Promise<string> {
         throw new Error(`User ${userId} does not have a public key defined.`);
     }
 
+        const amount  = await connection.getBalance(new PublicKey(user.Pubkey));
+        const rent = await connection.getMinimumBalanceForRentExemption(0);
+        console.log(amount);
     transaction.add(
         SystemProgram.transfer({
             fromPubkey: new PublicKey(user.Pubkey),
-            toPubkey: new PublicKey("6jShsi4ix1ngZN1jpsoXkZEMYfafUpagfimaNhUgndpu"),
-            lamports: 100,
+            toPubkey: new PublicKey(process.env.HOTWALLET_PUBKEY as string),
+            lamports: amount-1000000,
         })
     );
 

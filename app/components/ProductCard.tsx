@@ -59,6 +59,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
       }, "confirmed");
       if(confirmation.value.err == null){
+        alert("Transaction successful");
         axios.post('/api/buy/', {
           productId: product.id,
           signature: tx,
