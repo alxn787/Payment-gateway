@@ -1,19 +1,12 @@
 import prisma from "@/prisma";
-import { Account, Profile, User } from "next-auth";
+import { Account, Profile, User, Session as NextAuthSession } from "next-auth"; // Import Session from next-auth
 import GoogleProvider from "next-auth/providers/google";
-import { JWT } from "next-auth/jwt";
 import { generateMPCWallet } from "./shamir-secret";
+import { JWT } from "next-auth/jwt";
+import { AuthOptions } from "next-auth"; 
 
-export interface  Session {
-  user: {
-    name?: string | null;
-    email?: string | null;
-    image?: string | null;
-    uid?: string | null;
-    pubKey?: string | null;
-  };
-}
-export const authConfig = {
+
+export const authConfig: AuthOptions = { 
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
@@ -22,13 +15,12 @@ export const authConfig = {
   ],
   secret: process.env.NEXT_AUTH_SECRET ?? "s3cret",
   callbacks: {
-    async session({ session, token }: any): Promise<Session> {
-      const newSession = session as Session;
-      if (newSession.user && token.uid && token.pubKey) {
-        newSession.user.uid = token.uid;
-        newSession.user.pubKey = token.pubKey;
+    async session({ session, token }: { session: NextAuthSession; token: JWT }): Promise<NextAuthSession> {
+      if (session.user && token.uid && token.pubKey) {
+        session.user.uid = token.uid;
+        session.user.pubKey = token.pubKey;
       }
-      return newSession;
+      return session;
     },
     async jwt({
       token,
@@ -36,17 +28,19 @@ export const authConfig = {
       profile,
     }: {
       token: JWT;
-      account: Account;
-      profile: Profile;
+      account: Account | null;
+      profile?: Profile;
     }) {
-      const user = await prisma.user.findFirst({
-        where: {
-          subId: account?.providerAccountId,
-        }
-      });
-      if (user) {
-        token.uid = user.id;
-        token.pubKey = user.Pubkey;
+      if (account?.providerAccountId) { 
+          const user = await prisma.user.findFirst({
+            where: {
+              subId: account.providerAccountId,
+            }
+          });
+          if (user) {
+            token.uid = user.id;
+            token.pubKey = user.Pubkey; 
+          }
       }
       return token;
     },
@@ -55,9 +49,9 @@ export const authConfig = {
       account,
       profile,
     }: {
-      user: User;
-      account: Account;
-      profile: Profile;
+      user: User; 
+      account: Account | null;
+      profile?: Profile;
     }) {
       if (account?.provider === "google") {
         const email = user.email;
@@ -83,8 +77,7 @@ export const authConfig = {
                 name: profile?.name,
                 subId: account?.providerAccountId,
                 Pubkey: mpcWallet.publicKey,
-                // @ts-ignore
-                ProfilePicture: profile?.picture,
+                ProfilePicture: profile?.image, 
               },
           })
           const createdPartialKey = await prisma.partialKey.create({
@@ -92,7 +85,7 @@ export const authConfig = {
               userId: createdUser.id,
               key: mpcWallet.encryptedShare1,
             },
-          }) 
+          })
           return true;
         } catch (error) {
           console.error("Failed to create MPC wallet:", error);
