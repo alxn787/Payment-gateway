@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Navbar from './components/Navbar';
 import ProductCard from './components/ProductCard';
 import axios from 'axios';
+import { useSession } from 'next-auth/react';
 
 type Inventory = {
   id: string;
@@ -15,6 +16,7 @@ type Inventory = {
 
 const Home = () => {
     const [inventory, setInventory] = useState<Inventory[]>([]);
+    const session = useSession();
 
   useEffect(() => {
     getInventory();
@@ -30,7 +32,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
-      <Navbar />
+      <Navbar session={session} />
 
       <div className="bg-gradient-to-r from-gray-800/20 to-gray-900/20 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
