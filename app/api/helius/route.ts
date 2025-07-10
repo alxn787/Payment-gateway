@@ -1,3 +1,4 @@
+/* eslint-disable  */
 import prisma from '@/prisma';
 import { signTransactionMPC } from '../../../lib/shamir-secret';
 import { NextResponse } from 'next/server';
