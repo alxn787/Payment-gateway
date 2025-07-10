@@ -28,6 +28,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
   
 
   const handleBuy = useCallback(async (productPrice: number) => {
+    if(!session.data?.user?.pubKey) {
+      return;
+    }
     if (!connected || !wallet?.adapter.publicKey) {
           return;
       }
@@ -104,7 +107,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
         <Button
           className="w-full bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 text-white font-medium cursor-pointer"
-          onClick={()=>handleBuy(product.price)}
+          onClick={async()=>handleBuy(product.price)}
           disabled={product.stock === 0 || isBuying}
         >
           {isBuying ? (
