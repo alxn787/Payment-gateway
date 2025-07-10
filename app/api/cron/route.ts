@@ -141,8 +141,6 @@ async function transfer(user: User): Promise<string> {
     }
 
         const amount  = await connection.getBalance(new PublicKey(user.Pubkey));
-        const rent = await connection.getMinimumBalanceForRentExemption(0);
-        console.log(amount);
     transaction.add(
         SystemProgram.transfer({
             fromPubkey: new PublicKey(user.Pubkey),
