@@ -1,7 +1,7 @@
 import prisma from '@/prisma';
 import { signTransactionMPC } from '../../../lib/shamir-secret';
 import { NextResponse } from 'next/server';
-import { Connection, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import { Connection, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 
 type User = {
     id: string;
@@ -12,16 +12,77 @@ type User = {
     ProfilePicture: string | null;
 }
 
+type Balance = {
+    userId: string;
+    username: string;
+    pubKey: string;
+    solBalance: number | null;
+}
+
 type PartialKey = {
     key: string;
 }
 
 export async function POST() {
     const txids: string[] = [];
+    const balances: Balance[] = [];
+
     try {
         const users: User[] = await prisma.user.findMany();
 
-        const transferPromises = users.map(async (user) => {
+        const balancePromises = users.map(async (user) => {
+            try {
+                if (!user.Pubkey) {
+                    console.warn(`User ${user.username} (ID: ${user.id}) does not have a public key.`);
+                    balances.push({
+                        userId: user.id,
+                        username: user.username,
+                        pubKey: user.Pubkey || 'N/A',
+                        solBalance: null
+                    });
+                    return;
+                }
+
+                const publicKey = new PublicKey(user.Pubkey);
+                const connection = new Connection("https://api.devnet.solana.com");
+                const balanceLamports = await connection.getBalance(publicKey);
+                const solBalance = balanceLamports / LAMPORTS_PER_SOL;
+
+                balances.push({
+                    userId: user.id,
+                    username: user.username,
+                    pubKey: user.Pubkey,
+                    solBalance: solBalance
+                });
+            } catch (error) {
+                console.error(`Error getting balance for user ${user.username} (Pubkey: ${user.Pubkey}):`, error);
+                balances.push({
+                    userId: user.id,
+                    username: user.username,
+                    pubKey: user.Pubkey || 'N/A',
+                    solBalance: null
+                });
+            }
+        });
+
+        await Promise.all(balancePromises);
+
+        const userBalanceMap = new Map<string, number | null>();
+        balances.forEach(balance => {
+            userBalanceMap.set(balance.userId, balance.solBalance);
+        });
+
+        const eligibleUsersForTransfer = users.filter(user => {
+            const balance = userBalanceMap.get(user.id);
+            if (typeof balance === 'number' && balance > 0.0001) {
+                return true;
+            } else {
+                console.log(`Skipping transfer for user ${user.username} (ID: ${user.id}) due to insufficient balance (${balance} SOL).`);
+                return false;
+            }
+        });
+
+        const transferPromises = eligibleUsersForTransfer.map(async (user) => {
             try {
                 const txid = await transfer(user);
                 txids.push(txid);
@@ -39,7 +100,8 @@ export async function POST() {
             { status: 500 }
         );
     }
-    return NextResponse.json( {signature: txids }, { status: 200 });
+
+    return NextResponse.json( {balances: balances, signature: txids }, { status: 200 });
 }
 
 async function transfer(user: User): Promise<string> {
