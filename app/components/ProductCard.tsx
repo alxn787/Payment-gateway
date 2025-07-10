@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import axios from 'axios';
 import { useState, useCallback } from 'react';
-import { Connection, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import { Connection, PublicKey, sendAndConfirmTransaction, SystemProgram, Transaction } from '@solana/web3.js';
 import { useSession } from 'next-auth/react';
 import { useWallet } from '@solana/wallet-adapter-react';
 
@@ -24,25 +24,42 @@ interface ProductCardProps {
 const ProductCard = ({ product }: ProductCardProps) => {
   const [isBuying, setIsBuying] = useState(false);
   const session = useSession();
-  const wallet = useWallet();
+  const { wallet, connected }= useWallet();
   
 
   const handleBuy = useCallback(async (productPrice: number) => {
+    if (!connected || !wallet?.adapter.publicKey) {
+          return;
+      }
     setIsBuying(true);
     try {
-      if(!wallet.connected){
-        alert("Please connect your wallet");
-        return;
+      const connection = new Connection("https://api.devnet.solana.com");
+      const transaction = new Transaction().add(
+          SystemProgram.transfer({
+              fromPubkey: wallet.adapter.publicKey,
+              toPubkey: new PublicKey(session.data?.user?.pubKey??""),
+              lamports:Number(productPrice) * 1000000000
+          })
+      );
+      
+      const latestBlockHash = await connection.getLatestBlockhash();
+      transaction.recentBlockhash = latestBlockHash.blockhash;
+      transaction.lastValidBlockHeight = latestBlockHash.lastValidBlockHeight;
+      transaction.feePayer = wallet.adapter.publicKey;
+      const tx = await wallet.adapter.sendTransaction(transaction, connection,{
+        preflightCommitment: "confirmed",
+      });
+      console.log("tx", tx);
+      const confirmation = await connection.confirmTransaction({
+          signature: tx,
+          blockhash: latestBlockHash.blockhash,
+          lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+      }, "confirmed");
+      if(confirmation.value.err == null){
+        console.log("Transaction successful");
       }
-      const connection = new Connection("https://api.devnet.solana.com")
-      const blockhash = await connection.getLatestBlockhash();
-      // const tx = new Transaction().add(
-      //   SystemProgram.transfer({
-      //     fromPubkey:wallet.publicKey,
-      //     toPubkey: new PublicKey(session.data?.user.pubKey),
-      //     lamports:productPrice*1000000
-      //   })
-      // )
+      console.log("confirmation", confirmation);
+
     } catch (error) {
       console.error('Error buying product:', error);
     } finally {

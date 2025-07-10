@@ -28,7 +28,6 @@ export const authConfig = {
         newSession.user.uid = token.uid;
         newSession.user.pubKey = token.pubKey;
       }
-      console.log("newSession", newSession);
       return newSession;
     },
     async jwt({
@@ -49,7 +48,6 @@ export const authConfig = {
         token.uid = user.id;
         token.pubKey = user.Pubkey;
       }
-      console.log("token", token);
       return token;
     },
     async signIn({

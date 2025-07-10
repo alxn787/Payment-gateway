@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ShoppingCart, User, LogIn, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signIn, signOut, useSession } from 'next-auth/react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 interface NavbarProps {
   isSignedIn?: boolean;
@@ -49,12 +50,16 @@ const Navbar = ({ isSignedIn = false, userName = "Guest" }: NavbarProps) => {
             </Button>
             
             {session.data?.user ? (
-              <Button
-               onClick={()=>signOut()}
-               size="sm" className="border border-gray-400 text-gray-300 bg-neutral-900 cursor-pointer">
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
+              <div>
+                
+                <Button
+                onClick={()=>signOut()}
+                size="sm" className="border border-gray-400 text-gray-300 bg-neutral-900 cursor-pointer">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+                <WalletMultiButton/>
+              </div>
             ) : (
               <Button
                onClick={()=>signIn()}
