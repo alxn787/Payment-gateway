@@ -32,7 +32,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
-      <Navbar session={session} />
+      <Navbar />
 
       <div className="bg-gradient-to-r from-gray-800/20 to-gray-900/20 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
