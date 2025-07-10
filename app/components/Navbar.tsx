@@ -4,10 +4,6 @@ import { Button } from '@/components/ui/button';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
-interface NavbarProps {
-  isSignedIn?: boolean;
-  userName?: string;
-}
 
 const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
