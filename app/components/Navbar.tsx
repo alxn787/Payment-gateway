@@ -6,8 +6,9 @@ import { signIn, signOut, useSession } from 'next-auth/react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 
-const Navbar = ( session:any) => {
+const Navbar = ( ) => {
     const [isScrolled, setIsScrolled] = useState(false);
+    const session = useSession();
     const image  = session?.data?.user?.image || "https://imgs.search.brave.com/B1aaBgz_pXUkBvbO88vfuUOU0_ZwfLeMlQuyPZ9tzR8/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly93YWxs/cGFwZXJzLmNvbS9p/bWFnZXMvaGQvYmFj/ay12aWV3LWdva3Ut/dWx0cmEtaW5zdGlu/Y3QtdTE2ZHBqM3k2/Mmd1eTJwcy5qcGc";
 
   useEffect(() => {
