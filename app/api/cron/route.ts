@@ -23,7 +23,16 @@ type PartialKey = {
     key: string;
 }
 
-export async function POST() {
+export async function POST(Request: Request) {
+    const { cronsecret } = await Request.json();
+    if (cronsecret !== process.env.CRON_SECRET) {
+        return new Response("Unauthorized", {
+            status: 401,
+            headers: {
+                "Content-Type": "text/plain",
+            },
+        });
+    }
     const txids: string[] = [];
     const balances: Balance[] = [];
 
