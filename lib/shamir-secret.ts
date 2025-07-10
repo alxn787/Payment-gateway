@@ -316,7 +316,7 @@ export async function signTransactionMPC(
   userId: string,
   transaction: Transaction,
   encryptedShare1: string
-): Promise<any> {
+): Promise<Transaction> {
   let keypair: Keypair | null = null;
 
   try {

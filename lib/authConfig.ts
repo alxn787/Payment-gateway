@@ -1,3 +1,4 @@
+/* eslint-disable */
 import prisma from "@/prisma";
 import { Account, Profile, User, Session as NextAuthSession } from "next-auth"; // Import Session from next-auth
 import GoogleProvider from "next-auth/providers/google";

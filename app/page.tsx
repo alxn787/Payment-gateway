@@ -14,10 +14,7 @@ type Inventory = {
 }
 
 const Home = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('name');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [inventory, setInventory] = useState<Inventory[]>([]);
+    const [inventory, setInventory] = useState<Inventory[]>([]);
 
   useEffect(() => {
     getInventory();
@@ -55,11 +52,7 @@ const Home = () => {
           <p className="text-gray-400">Discover our premium gaming equipment collection</p>
         </div>
 
-        <div className={`grid gap-6 ${
-          viewMode === 'grid' 
-            ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-            : 'grid-cols-1'
-        }`}>
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ">
           {inventory.map((product: Inventory) => (
             <ProductCard key={product.id} product={product} />
           ))}
