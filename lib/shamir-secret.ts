@@ -59,7 +59,6 @@ export async function checkShareExpiration(userId: string): Promise<{
   try {
     const ttl2 = await redis1.ttl(redisKey2);
     if (ttl2 === -2) {
-      // Key doesn't exist
       missingShares.push("share2");
     } else if (ttl2 > 0) {
       minTTL = Math.min(minTTL, ttl2);
@@ -67,7 +66,6 @@ export async function checkShareExpiration(userId: string): Promise<{
 
     const ttl3 = await redis2.ttl(redisKey3);
     if (ttl3 === -2) {
-      // Key doesn't exist
       missingShares.push("share3");
     } else if (ttl3 > 0) {
       minTTL = Math.min(minTTL, ttl3);
@@ -94,7 +92,6 @@ export async function checkShareExpiration(userId: string): Promise<{
   }
 }
 
-// get other share given db share 
 export async function recoverMissingShares(
   userId: string,
   databaseShare: string
@@ -207,7 +204,6 @@ export async function ensureShareAvailability(
   }
 }
 
-//generates new mpc wallet with private keys split
 export async function generateMPCWallet(userId: string): Promise<MPCWallet> {
   const keypair = Keypair.generate();
   const privateKeyBytes = keypair.secretKey;
@@ -242,7 +238,7 @@ export async function generateMPCWallet(userId: string): Promise<MPCWallet> {
 
 export async function reconstructPrivateKey(
   userId: string,
-  share1: string // From database
+  share1: string 
 ): Promise<Keypair> {
   try {
     const shareAvailable = await ensureShareAvailability(userId, share1);
@@ -255,7 +251,6 @@ export async function reconstructPrivateKey(
     const decryptedShare1 = decryptData(share1, MPC_CONFIG.ENCRYPTION_KEY);
     const shareBuffer1 = Buffer.from(decryptedShare1, "hex");
 
-    // Get Share 2 from Redis 1
     const redisKey2 = `mpc:share:${userId}:2`;
     const encryptedShare2 = await redis1.get<string>(redisKey2);
 
@@ -271,7 +266,6 @@ export async function reconstructPrivateKey(
     );
     const shareBuffer2 = Buffer.from(decryptedShare2, "hex");
 
-    // Get Share 3 from Redis 2
     const redisKey3 = `mpc:share:${userId}:3`;
     const encryptedShare3 = await redis2.get<string>(redisKey3);
 
@@ -321,7 +315,7 @@ export async function validateShares(
 export async function signTransactionMPC(
   userId: string,
   transaction: Transaction,
-  encryptedShare1: string // From database - other shares fetched automatically
+  encryptedShare1: string
 ): Promise<any> {
   let keypair: Keypair | null = null;
 
@@ -333,7 +327,6 @@ export async function signTransactionMPC(
 
     return transaction;
   } finally {
-    // Security: Clear the reconstructed key from memory
     if (keypair) {
       keypair.secretKey.fill(0);
       keypair = null;
@@ -361,7 +354,6 @@ export async function rotateKeyShares(
     publicKey,
   }));
 
-  // Update both Redis instances with new shares
   const ttlSeconds = MPC_CONFIG.SHARE_TTL_DAYS * 24 * 60 * 60;
   const redisKey2 = `mpc:share:${userId}:2`;
   await redis1.setex(redisKey2, ttlSeconds, encryptedShares[1].shareData);

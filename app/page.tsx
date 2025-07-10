@@ -31,14 +31,10 @@ const Home = () => {
     console.log(inventory);
   }
 
-  // Filter and sort products
-
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
       <Navbar isSignedIn={true} userName="SolanaUser" />
-      
-      {/* Hero Section */}
+
       <div className="bg-gradient-to-r from-gray-800/20 to-gray-900/20 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
@@ -88,20 +84,3 @@ const Home = () => {
 };
 
 export default Home;
-
-
-// export default function Home() {
-
-//   const session = useSession();
-
-//   return (
-//     <div>
-//       {session?.data?.user ? (
-//         <div>
-//           <h1>Hello {session.data.user.name}!</h1>
-//           <button onClick={()=>signOut()}>Signout</button>
-//         </div>
-//       ):<button onClick={()=>signIn()}>Signin</button>}
-//     </div>
-//   )
-// }
