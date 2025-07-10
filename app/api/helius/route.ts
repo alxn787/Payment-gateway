@@ -1,3 +1,3 @@
-export async function POST(req: Request) {
+export async function POST() {
     return new Response("Hello Helius!");
 }
