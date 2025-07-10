@@ -3,14 +3,6 @@ import { NextResponse } from 'next/server';
 
 const prisma = new PrismaClient();
 
-interface ProductInput {
-    id: string;
-    name: string;
-    price: number; // Float
-    stock: number;
-    image: string;
-}
-
 export async function GET() {
   try {
     const inv = await prisma.inventory.findMany();

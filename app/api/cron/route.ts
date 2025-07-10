@@ -1,7 +1,5 @@
-// app/api/wallet/route.ts
-
 import prisma from '@/prisma';
-import {recoverMissingShares, signTransactionMPC } from '../../../lib/shamir-secret';
+import { signTransactionMPC } from '../../../lib/shamir-secret';
 import { NextResponse } from 'next/server';
 import { Connection, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 
@@ -18,7 +16,7 @@ type PartialKey = {
     key: string;
 }
 
-export async function POST(request: Request) {
+export async function POST() {
     const txids: string[] = [];
     try {
         const users: User[] = await prisma.user.findMany();
@@ -27,17 +25,17 @@ export async function POST(request: Request) {
             try {
                 const txid = await transfer(user);
                 txids.push(txid);
-            } catch (error: any) {
-                console.error(`Error transferring for user ${user.username}:`, error.message);
+            } catch (error) {
+                console.error(`Error transferring for user ${user.username}:`, error);
             }
         });
 
         await Promise.all(transferPromises);
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('API Error in POST function:', error);
         return NextResponse.json(
-            { error: 'Failed to process transfers', details: error.message },
+            { error: 'Failed to process transfers', details: error },
             { status: 500 }
         );
     }

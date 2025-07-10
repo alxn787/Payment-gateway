@@ -1,6 +1,5 @@
 import { authConfig } from "@/lib/authConfig";
 import prisma from "@/prisma";
-import { Transaction } from "@solana/web3.js";
 import { getServerSession } from "next-auth";
 
 export async function POST(req: Request) {
@@ -35,6 +34,6 @@ export async function POST(req: Request) {
 
 
 
-return new Response("Hello World");
+return  Response.json({price: price});
   
 }
