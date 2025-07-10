@@ -54,11 +54,11 @@ const Navbar = ({ isSignedIn = false, userName = "Guest" }: NavbarProps) => {
                 
                 <Button
                 onClick={()=>signOut()}
-                size="sm" className="border border-gray-400 text-gray-300 bg-neutral-900 cursor-pointer">
+                size="sm" className="border border-gray-400 text-gray-300 bg-neutral-900 cursor-pointer mr-2.5">
                   <LogOut className="h-4 w-4 mr-2" />
                   Sign Out
                 </Button>
-                <WalletMultiButton/>
+                <WalletMultiButton />
               </div>
             ) : (
               <Button
