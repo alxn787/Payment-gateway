@@ -16,7 +16,6 @@ type Inventory = {
 
 const Home = () => {
     const [inventory, setInventory] = useState<Inventory[]>([]);
-    const session = useSession();
 
   useEffect(() => {
     getInventory();
