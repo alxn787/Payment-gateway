@@ -1,16 +1,16 @@
 import prisma from "@/prisma";
-import { Account, Profile, Session, User } from "next-auth";
+import { Account, Profile, User } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { JWT } from "next-auth/jwt";
 import { generateMPCWallet } from "./shamir-secret";
 
-export interface CustomSession extends Session {
+export interface  Session {
   user: {
     name?: string | null;
     email?: string | null;
     image?: string | null;
-    uid: string;
-    pubKey: string;
+    uid?: string | null;
+    pubKey?: string | null;
   };
 }
 export const authConfig = {
@@ -22,12 +22,13 @@ export const authConfig = {
   ],
   secret: process.env.NEXT_AUTH_SECRET ?? "s3cret",
   callbacks: {
-    async session({ session, token }: any): Promise<CustomSession> {
-      const newSession = session as CustomSession;
-      if (newSession.user && token.uid && token.publicKey) {
+    async session({ session, token }: any): Promise<Session> {
+      const newSession = session as Session;
+      if (newSession.user && token.uid && token.pubKey) {
         newSession.user.uid = token.uid;
         newSession.user.pubKey = token.pubKey;
       }
+      console.log("newSession", newSession);
       return newSession;
     },
     async jwt({
@@ -48,6 +49,7 @@ export const authConfig = {
         token.uid = user.id;
         token.pubKey = user.Pubkey;
       }
+      console.log("token", token);
       return token;
     },
     async signIn({

@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import axios from 'axios';
 import { useState, useCallback } from 'react';
+import { Connection, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import { useSession } from 'next-auth/react';
+import { useWallet } from '@solana/wallet-adapter-react';
 
 interface Product {
   id: string;
@@ -20,12 +23,26 @@ interface ProductCardProps {
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const [isBuying, setIsBuying] = useState(false);
+  const session = useSession();
+  const wallet = useWallet();
+  
 
-  const handleBuy = useCallback(async () => {
+  const handleBuy = useCallback(async (productPrice: number) => {
     setIsBuying(true);
     try {
-      const response = await axios.post('/api/buy', { productId: product.id });
-      console.log('Buy successful:', response.data);
+      if(!wallet.connected){
+        alert("Please connect your wallet");
+        return;
+      }
+      const connection = new Connection("https://api.devnet.solana.com")
+      const blockhash = await connection.getLatestBlockhash();
+      // const tx = new Transaction().add(
+      //   SystemProgram.transfer({
+      //     fromPubkey:wallet.publicKey,
+      //     toPubkey: new PublicKey(session.data?.user.pubKey),
+      //     lamports:productPrice*1000000
+      //   })
+      // )
     } catch (error) {
       console.error('Error buying product:', error);
     } finally {
@@ -68,7 +85,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
         <Button
           className="w-full bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 text-white font-medium cursor-pointer"
-          onClick={handleBuy}
+          onClick={()=>handleBuy(product.price)}
           disabled={product.stock === 0 || isBuying}
         >
           {isBuying ? (
