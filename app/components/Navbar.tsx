@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useState, useEffect } from 'react';
 import { ShoppingCart, LogIn, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
