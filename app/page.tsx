@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import Navbar from './components/Navbar';
 import ProductCard from './components/ProductCard';
 import axios from 'axios';
-import { useSession } from 'next-auth/react';
 
 type Inventory = {
   id: string;
