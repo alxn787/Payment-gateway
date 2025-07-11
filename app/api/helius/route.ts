@@ -112,10 +112,10 @@ export async function POST(Request: Request) {
     //     );
     // }
 
-    // return NextResponse.json(
-    //     { message: 'Webhook payload processed', signatures: processedSignatures },
-    //     { status: 200 }
-    // );
+    return NextResponse.json(
+        { message: 'Webhook payload processed' },
+        { status: 200 }
+    );
 }
 
 async function transfer(user: User): Promise<string> {
