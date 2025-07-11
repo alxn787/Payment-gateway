@@ -182,7 +182,6 @@ export async function ensureShareAvailability(
       return true; 
     }
 
-    console.log(`Share maintenance needed for user ${userId}:`, status);
 
     const recoveredShares = await recoverMissingShares(userId, databaseShare);
 

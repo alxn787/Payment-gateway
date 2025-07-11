@@ -10,7 +10,6 @@ export async function addUsertoHelius(pubkey: string) {
     const response = await helius.appendAddressesToWebhook(webhookId, [
       pubkey,
     ]);
-    console.log('Updated webhook with new addresses:', response);
     return response;
   } catch (error) {
     console.error('Error adding user to Helius:', error);

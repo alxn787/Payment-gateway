@@ -52,7 +52,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
       const tx = await wallet.adapter.sendTransaction(transaction, connection,{
         preflightCommitment: "confirmed",
       });
-      console.log("tx", tx);
       const confirmation = await connection.confirmTransaction({
           signature: tx,
           blockhash: latestBlockHash.blockhash,

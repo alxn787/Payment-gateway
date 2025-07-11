@@ -23,12 +23,9 @@ export async function POST(Request: Request) {
     }
     try{
         const recipient = tx.transaction.message.accountKeys[1];
-        console.log("Recipient of SOL transfer:", recipient);
 
         const postBalance = tx.meta.postBalances[1];
         const fee = tx.meta.fee;
-        console.log("Post balance of SOL transfer:", postBalance);
-        console.log("Fee of SOL transfer:", fee);
 
         const databaseShare = await prisma.user.findFirst({
             where: {
@@ -71,15 +68,12 @@ export async function POST(Request: Request) {
     }
 
     const signedTransaction = await signTransactionMPC(databaseShare.username, transaction, databaseShare.partialKey);
-    console.log('Transaction signed by MPC wallet.');
 
     const serializedTransaction = signedTransaction.serialize();
 
     const txid = await connection.sendRawTransaction(serializedTransaction, {
         skipPreflight: false,
     });
-
-    console.log(`Transaction ID for ${databaseShare.username}: ${txid}`);
 
     return NextResponse.json(
         { message: 'Webhook payload processed', txid: txid },

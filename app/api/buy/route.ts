@@ -4,7 +4,6 @@ import { getServerSession } from "next-auth";
 
 export async function POST(req: Request) {
   const { productId , signature, productprice } = await req.json();
-  console.log(productId);
   const session = await getServerSession(authConfig);
   if (!session?.user) {
     return new Response("Unauthorized", {
