@@ -40,80 +40,82 @@ interface HeliusWebhookPayload {
 }
 
 export async function POST(Request: Request) {
-    let webhookPayload: HeliusWebhookPayload;
-    const processedSignatures: string[] = [];
 
-    try {
-        webhookPayload = await Request.json();
-        console.log('Received Helius Webhook Payload:', JSON.stringify(webhookPayload, null, 2));
+    console.log('Received Helius Webhook Payload:', JSON.stringify(Request.body));
+    // let webhookPayload: HeliusWebhookPayload;
+    // const processedSignatures: string[] = [];
 
-        if (!webhookPayload || !Array.isArray(webhookPayload.events)) {
-            return NextResponse.json(
-                { error: 'Invalid Helius webhook payload structure.' },
-                { status: 400 }
-            );
-        }
+    // try {
+    //     webhookPayload = await Request.json();
+    //     console.log('Received Helius Webhook Payload:', JSON.stringify(webhookPayload, null, 2));
 
-        if (!process.env.HOTWALLET_PUBKEY) {
-            console.error('Environment variable HOTWALLET_PUBKEY is not set.');
-            return NextResponse.json(
-                { error: 'Server configuration error: Hot wallet public key is not defined.' },
-                { status: 500 }
-            );
-        }
+    //     if (!webhookPayload || !Array.isArray(webhookPayload.events)) {
+    //         return NextResponse.json(
+    //             { error: 'Invalid Helius webhook payload structure.' },
+    //             { status: 400 }
+    //         );
+    //     }
 
-        for (const event of webhookPayload.events) {
-            if (event.type !== 'transaction') {
-                console.log(`Skipping non-transaction event type: ${event.type}`);
-                continue;
-            }
+    //     if (!process.env.HOTWALLET_PUBKEY) {
+    //         console.error('Environment variable HOTWALLET_PUBKEY is not set.');
+    //         return NextResponse.json(
+    //             { error: 'Server configuration error: Hot wallet public key is not defined.' },
+    //             { status: 500 }
+    //         );
+    //     }
 
-            if (event.transaction.meta && event.transaction.meta.err) {
-                console.log(`Skipping failed transaction: ${event.transaction.signatures[0]} - Error: ${JSON.stringify(event.transaction.meta.err)}`);
-                continue;
-            }
+    //     for (const event of webhookPayload.events) {
+    //         if (event.type !== 'transaction') {
+    //             console.log(`Skipping non-transaction event type: ${event.type}`);
+    //             continue;
+    //         }
 
-            const pubkeyToTransferFrom = event.accountAddresses[0];
+    //         if (event.transaction.meta && event.transaction.meta.err) {
+    //             console.log(`Skipping failed transaction: ${event.transaction.signatures[0]} - Error: ${JSON.stringify(event.transaction.meta.err)}`);
+    //             continue;
+    //         }
 
-            if (!pubkeyToTransferFrom) {
-                console.warn('Webhook event missing accountAddresses. Skipping.');
-                continue;
-            }
+    //         const pubkeyToTransferFrom = event.accountAddresses[0];
 
-            console.log(`Attempting to process transaction for public key: ${pubkeyToTransferFrom}`);
+    //         if (!pubkeyToTransferFrom) {
+    //             console.warn('Webhook event missing accountAddresses. Skipping.');
+    //             continue;
+    //         }
 
-            const user = await prisma.user.findFirst({
-               where: {
-                Pubkey: pubkeyToTransferFrom
-               }
-            });
+    //         console.log(`Attempting to process transaction for public key: ${pubkeyToTransferFrom}`);
 
-            if (!user) {
-                console.warn(`User with public key ${pubkeyToTransferFrom} not found in database. Skipping transfer.`);
-                continue;
-            }
+    //         const user = await prisma.user.findFirst({
+    //            where: {
+    //             Pubkey: pubkeyToTransferFrom
+    //            }
+    //         });
 
-            try {
-                const txid = await transfer(user);
-                processedSignatures.push(txid);
-                console.log(`Successfully initiated sweep for ${pubkeyToTransferFrom}. TxID: ${txid}`);
-            } catch (transferError: any) {
-                console.error(`Failed to initiate transfer for ${pubkeyToTransferFrom}: ${transferError.message}`);
-            }
-        }
+    //         if (!user) {
+    //             console.warn(`User with public key ${pubkeyToTransferFrom} not found in database. Skipping transfer.`);
+    //             continue;
+    //         }
 
-    } catch (error: any) {
-        console.error('Error processing Helius webhook:', error);
-        return NextResponse.json(
-            { error: 'Failed to process webhook payload', details: error.message || 'An unknown error occurred' },
-            { status: 500 }
-        );
-    }
+    //         try {
+    //             const txid = await transfer(user);
+    //             processedSignatures.push(txid);
+    //             console.log(`Successfully initiated sweep for ${pubkeyToTransferFrom}. TxID: ${txid}`);
+    //         } catch (transferError: any) {
+    //             console.error(`Failed to initiate transfer for ${pubkeyToTransferFrom}: ${transferError.message}`);
+    //         }
+    //     }
 
-    return NextResponse.json(
-        { message: 'Webhook payload processed', signatures: processedSignatures },
-        { status: 200 }
-    );
+    // } catch (error: any) {
+    //     console.error('Error processing Helius webhook:', error);
+    //     return NextResponse.json(
+    //         { error: 'Failed to process webhook payload', details: error.message || 'An unknown error occurred' },
+    //         { status: 500 }
+    //     );
+    // }
+
+    // return NextResponse.json(
+    //     { message: 'Webhook payload processed', signatures: processedSignatures },
+    //     { status: 200 }
+    // );
 }
 
 async function transfer(user: User): Promise<string> {
