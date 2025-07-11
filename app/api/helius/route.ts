@@ -41,6 +41,9 @@ interface HeliusWebhookPayload {
 
 export async function POST(Request: Request) {
 
+    const content = await Request.json();
+    console.log('Received Helius Webhook Payload content:', content);
+
     console.log('Received Helius Webhook Payload:', JSON.stringify(Request.body));
     // let webhookPayload: HeliusWebhookPayload;
     // const processedSignatures: string[] = [];
