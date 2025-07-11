@@ -2,7 +2,7 @@
 import prisma from '@/prisma';
 import { signTransactionMPC } from '../../../lib/shamir-secret';
 import { NextResponse } from 'next/server';
-import { Connection, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { Connection, PublicKey, SystemProgram, Transaction} from '@solana/web3.js';
 
 
 export async function POST(Request: Request) {
@@ -34,11 +34,18 @@ export async function POST(Request: Request) {
             select:{
                 partialKey: true,
                 username:true,
+                Pubkey: true,
             }
         });
 
     if (!databaseShare) {
         throw new Error(`User does not have a partial key in the database. Cannot perform transfer.`);
+    }
+    if(databaseShare.Pubkey != recipient){
+           return NextResponse.json(
+        { message: 'payment going out of the wallet'},
+        { status: 200 }
+    );
     }
 
     const connection = new Connection(SOLANA_DEVNET_RPC_URL);
