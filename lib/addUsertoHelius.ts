@@ -1,4 +1,4 @@
-import { Helius, Address } from 'helius-sdk'; // Replace with 'helius-sdk' in a production setting
+import { Helius} from 'helius-sdk'; // Replace with 'helius-sdk' in a production setting
 
 export async function addUsertoHelius(pubkey: string) {
   try{
