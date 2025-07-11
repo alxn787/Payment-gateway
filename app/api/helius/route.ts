@@ -19,7 +19,7 @@ export async function POST(Request: Request) {
 
     const content = await Request.json();
     const tx = content[0];
-    if (tx.meta.err == null) {
+    if (tx.meta.err != null) {
         throw new Error("Transaction didnt go through");
     }   
 
