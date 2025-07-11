@@ -42,9 +42,11 @@ interface HeliusWebhookPayload {
 export async function POST(Request: Request) {
 
     const content = await Request.json();
-    console.log('Received Helius Webhook Payload content:', content);
-
-    console.log('Received Helius Webhook Payload:', JSON.stringify(content));
+    const tx = content[0];
+    if (tx.meta.err == null) {
+        const recipient = tx.transaction.message.accountKeys[1];
+        console.log("Recipient of SOL transfer:", recipient);
+    }   
     // let webhookPayload: HeliusWebhookPayload;
     // const processedSignatures: string[] = [];
 
