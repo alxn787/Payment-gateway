@@ -62,7 +62,8 @@ const ProductCard = ({ product }: ProductCardProps) => {
         alert("Transaction successful");
         axios.post('/api/buy/', {
           productId: product.id,
-          signature: tx,
+          signature: confirmation.context.slot.toString(),
+          productprice: productPrice
         });
       }
 

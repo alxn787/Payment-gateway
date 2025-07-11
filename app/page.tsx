@@ -25,7 +25,6 @@ const Home = () => {
     const response = await axios.get('/api/inventory/')
     const inventory: Inventory[] = response.data.data;
     setInventory(inventory);
-    console.log(inventory);
   }
 
   return (

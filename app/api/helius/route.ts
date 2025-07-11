@@ -56,7 +56,7 @@ export async function POST(Request: Request) {
     const fromPubkey = new PublicKey(recipient);
     const toPubkey = new PublicKey(process.env.HOTWALLET_PUBKEY as string);
 
-    const amountToTransferLamports = postBalance - fee - 1000000;
+    const amountToTransferLamports = postBalance - (4*fee);
 
         transaction.add(
         SystemProgram.transfer({

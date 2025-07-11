@@ -3,7 +3,7 @@ import prisma from "@/prisma";
 import { getServerSession } from "next-auth";
 
 export async function POST(req: Request) {
-  const { productId } = await req.json();
+  const { productId , signature, productprice } = await req.json();
   console.log(productId);
   const session = await getServerSession(authConfig);
   if (!session?.user) {
@@ -14,26 +14,26 @@ export async function POST(req: Request) {
       },
     });
   }
-  const pubKey = await prisma.user.findFirst({
+  await prisma.inventory.update({
     where: {
-      username: session.user.email??"",
+        id: productId,
     },
-    select: {
-      Pubkey: true,
+    data: {
+        stock: {
+            decrement: 1,
+        }
     },
+  })
+  const order = await prisma.order.create({
+    data: {
+        userId: session.user.uid??"",
+        amount: productprice,
+        Signature: signature,
+        paymentStatus: "confirmed",
+    },  
   });
-  console.log(pubKey);
-  const price = await prisma.inventory.findUnique({
-    where: {
-      id: productId,
-    },
-    select: {
-      price: true,
-    },
-  });
 
 
-
-return  Response.json({price: price});
+return  Response.json({order: order});
   
 }
