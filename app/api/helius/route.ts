@@ -10,7 +10,6 @@ export async function POST(Request: Request) {
     const SOLANA_DEVNET_RPC_URL = "https://api.devnet.solana.com";
     const content = await Request.json();
     const tx = content[0];
-    console.log(tx.transaction.message.accountKeys)
     if (tx.meta.err != null) {
         throw new Error("Transaction didnt go through");
     }   
@@ -26,8 +25,6 @@ export async function POST(Request: Request) {
         const recipient = tx.transaction.message.accountKeys[1];
 
         const postBalance = tx.meta.postBalances[1];
-        const fee = tx.meta.fee;
-
         const databaseShare = await prisma.user.findFirst({
             where: {
                 Pubkey: recipient
@@ -38,7 +35,6 @@ export async function POST(Request: Request) {
                 Pubkey: true,
             }
         });
-        console.log(databaseShare);
 
         if(!databaseShare){
             return NextResponse.json(
