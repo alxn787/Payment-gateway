@@ -44,7 +44,7 @@ export async function POST(Request: Request) {
     const content = await Request.json();
     console.log('Received Helius Webhook Payload content:', content);
 
-    console.log('Received Helius Webhook Payload:', JSON.stringify(Request.body));
+    console.log('Received Helius Webhook Payload:', JSON.stringify(content));
     // let webhookPayload: HeliusWebhookPayload;
     // const processedSignatures: string[] = [];
 
