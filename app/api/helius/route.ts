@@ -40,14 +40,11 @@ export async function POST(Request: Request) {
         });
         console.log(databaseShare);
 
-    if (!databaseShare) {
-        throw new Error(`User does not have a partial key in the database. Cannot perform transfer.`);
-    }
-    if(databaseShare.Pubkey != recipient){
-           return NextResponse.json(
-        { message: 'payment going out of the wallet'},
-        { status: 200 }
-    );
+        if(!databaseShare){
+            return NextResponse.json(
+            { message: 'payment going out of the wallet'},
+            { status: 200 }
+        );
     }
 
     const connection = new Connection(SOLANA_DEVNET_RPC_URL);
