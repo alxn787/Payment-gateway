@@ -4,19 +4,10 @@ import { signTransactionMPC } from '../../../lib/shamir-secret';
 import { NextResponse } from 'next/server';
 import { Connection, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
 
-type User = {
-    id: string;
-    name: string | null;
-    Pubkey: string;
-    username: string;
-    subId: string;
-    ProfilePicture: string | null;
-}
-
-    const SOLANA_DEVNET_RPC_URL = "https://api.devnet.solana.com";
 
 export async function POST(Request: Request) {
-
+    
+    const SOLANA_DEVNET_RPC_URL = "https://api.devnet.solana.com";
     const content = await Request.json();
     const tx = content[0];
     if (tx.meta.err != null) {
@@ -39,37 +30,18 @@ export async function POST(Request: Request) {
         console.log("Post balance of SOL transfer:", postBalance);
         console.log("Fee of SOL transfer:", fee);
 
-    return NextResponse.json(
-        { message: 'Webhook payload processed' },
-        { status: 200 }
-    );
-
-    }catch(error){
-        console.error("Error processing Helius webhook:", error);
-        return NextResponse.json(
-            { error: 'Failed to process webhook payload', details: error || 'An unknown error occurred' },
-            { status: 500 }
-        );
-    }
-
-
-}
-
-async function transfer(user: User): Promise<string> {
-    const userId = user.username;
-    console.log(`Processing transfer for user: ${userId}`);
-
-    const databaseShare = await prisma.user.findFirst({
-        where: {
-            id: user.id,
-        },
-        select:{
-            partialKey: true,
-        }
-    });
+        const databaseShare = await prisma.user.findFirst({
+            where: {
+                Pubkey: recipient
+            },
+            select:{
+                partialKey: true,
+                username:true,
+            }
+        });
 
     if (!databaseShare) {
-        throw new Error(`User ${userId} does not have a partial key in the database. Cannot perform transfer.`);
+        throw new Error(`User does not have a partial key in the database. Cannot perform transfer.`);
     }
 
     const connection = new Connection(SOLANA_DEVNET_RPC_URL);
@@ -79,39 +51,14 @@ async function transfer(user: User): Promise<string> {
     const transaction = new Transaction
     transaction.recentBlockhash = blockhash;
     transaction.lastValidBlockHeight = lastValidBlockHeight;
-    transaction.feePayer = new PublicKey(user.Pubkey);
+    transaction.feePayer = new PublicKey(recipient);
 
-    if (!user.Pubkey) {
-        throw new Error(`User ${userId} does not have a public key defined. Cannot proceed with transfer.`);
-    }
-
-    const fromPubkey = new PublicKey(user.Pubkey);
+    const fromPubkey = new PublicKey(recipient);
     const toPubkey = new PublicKey(process.env.HOTWALLET_PUBKEY as string);
 
-    const currentBalanceLamports = await connection.getBalance(fromPubkey);
-    console.log(`Current balance for ${user.Pubkey}: ${currentBalanceLamports / LAMPORTS_PER_SOL} SOL`);
+    const amountToTransferLamports = postBalance - fee - 1000000;
 
-    const dummyTransaction = new Transaction().add(
-        SystemProgram.transfer({
-            fromPubkey: fromPubkey,
-            toPubkey: toPubkey,
-            lamports: 1
-        })
-    );
-    const feeEstimate = await connection.getFeeForMessage(dummyTransaction.compileMessage());
-    const estimatedFeeLamports = feeEstimate.value || 5000;
-
-    console.log(`Estimated transaction fee: ${estimatedFeeLamports} lamports`);
-
-    const amountToTransferLamports = currentBalanceLamports - estimatedFeeLamports;
-
-    if (amountToTransferLamports <= 0) {
-        throw new Error(`Insufficient funds in ${user.Pubkey} to cover transfer and fees. Balance: ${currentBalanceLamports / LAMPORTS_PER_SOL} SOL, Estimated Fee: ${estimatedFeeLamports / LAMPORTS_PER_SOL} SOL. No sweep performed.`);
-    }
-
-    console.log(`Transferring ${amountToTransferLamports / LAMPORTS_PER_SOL} SOL from ${user.Pubkey} to ${process.env.HOTWALLET_PUBKEY}`);
-
-    transaction.add(
+        transaction.add(
         SystemProgram.transfer({
             fromPubkey: fromPubkey,
             toPubkey: toPubkey,
@@ -123,7 +70,7 @@ async function transfer(user: User): Promise<string> {
         throw new Error("Database share not found");
     }
 
-    const signedTransaction = await signTransactionMPC(userId, transaction, databaseShare.partialKey);
+    const signedTransaction = await signTransactionMPC(databaseShare.username, transaction, databaseShare.partialKey);
     console.log('Transaction signed by MPC wallet.');
 
     const serializedTransaction = signedTransaction.serialize();
@@ -132,6 +79,18 @@ async function transfer(user: User): Promise<string> {
         skipPreflight: false,
     });
 
-    console.log(`Transaction ID for ${userId}: ${txid}`);
-    return txid;
+    console.log(`Transaction ID for ${databaseShare.username}: ${txid}`);
+
+    return NextResponse.json(
+        { message: 'Webhook payload processed', txid: txid },
+        { status: 200 }
+    );
+
+    }catch(error){
+        console.error("Error processing Helius webhook:", error);
+        return NextResponse.json(
+            { error: 'Failed to process webhook payload', details: error || 'An unknown error occurred' },
+            { status: 500 }
+        );
+    }
 }
