@@ -5,6 +5,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { generateMPCWallet } from "./shamir-secret";
 import { JWT } from "next-auth/jwt";
 import { AuthOptions } from "next-auth"; 
+import { addUsertoHelius } from "./addUsertoHelius";
 
 
 export const authConfig: AuthOptions = { 
@@ -71,6 +72,8 @@ export const authConfig: AuthOptions = {
         try {
           const mpcWallet = await generateMPCWallet(email);
 
+          await addUsertoHelius(mpcWallet.publicKey);
+
           const createdUser = await prisma.user
             .create({
               data: {
@@ -79,13 +82,8 @@ export const authConfig: AuthOptions = {
                 subId: account?.providerAccountId,
                 Pubkey: mpcWallet.publicKey,
                 ProfilePicture: profile?.image, 
+                partialKey: mpcWallet.encryptedShare1,
               },
-          })
-          const createdPartialKey = await prisma.partialKey.create({
-            data: {
-              userId: createdUser.id,
-              key: mpcWallet.encryptedShare1,
-            },
           })
           return true;
         } catch (error) {

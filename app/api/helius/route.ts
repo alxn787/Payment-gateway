@@ -13,126 +13,58 @@ type User = {
     ProfilePicture: string | null;
 }
 
-type PartialKey = {
-    key: string;
-}
-
-const SOLANA_DEVNET_RPC_URL = "https://api.devnet.solana.com";
-
-interface HeliusWebhookPayload {
-    events: Array<{
-        type: string;
-        timestamp: number;
-        webhookId: string;
-        accountAddresses: string[];
-        transaction: {
-            signatures: string[];
-            message: any;
-            meta: {
-                err: any | null;
-                fee: number;
-                logMessages: string[];
-                preBalances: number[];
-                postBalances: number[];
-            };
-        };
-    }>;
-}
+    const SOLANA_DEVNET_RPC_URL = "https://api.devnet.solana.com";
 
 export async function POST(Request: Request) {
 
     const content = await Request.json();
     const tx = content[0];
     if (tx.meta.err == null) {
+        throw new Error("Transaction didnt go through");
+    }   
+
+    if (!process.env.HOTWALLET_PUBKEY) {
+        console.error('Environment variable HOTWALLET_PUBKEY is not set.');
+        return NextResponse.json(
+            { error: 'Server configuration error: Hot wallet public key is not defined.' },
+            { status: 500 }
+        );
+    }
+    try{
         const recipient = tx.transaction.message.accountKeys[1];
         console.log("Recipient of SOL transfer:", recipient);
-    }   
-    // let webhookPayload: HeliusWebhookPayload;
-    // const processedSignatures: string[] = [];
 
-    // try {
-    //     webhookPayload = await Request.json();
-    //     console.log('Received Helius Webhook Payload:', JSON.stringify(webhookPayload, null, 2));
-
-    //     if (!webhookPayload || !Array.isArray(webhookPayload.events)) {
-    //         return NextResponse.json(
-    //             { error: 'Invalid Helius webhook payload structure.' },
-    //             { status: 400 }
-    //         );
-    //     }
-
-    //     if (!process.env.HOTWALLET_PUBKEY) {
-    //         console.error('Environment variable HOTWALLET_PUBKEY is not set.');
-    //         return NextResponse.json(
-    //             { error: 'Server configuration error: Hot wallet public key is not defined.' },
-    //             { status: 500 }
-    //         );
-    //     }
-
-    //     for (const event of webhookPayload.events) {
-    //         if (event.type !== 'transaction') {
-    //             console.log(`Skipping non-transaction event type: ${event.type}`);
-    //             continue;
-    //         }
-
-    //         if (event.transaction.meta && event.transaction.meta.err) {
-    //             console.log(`Skipping failed transaction: ${event.transaction.signatures[0]} - Error: ${JSON.stringify(event.transaction.meta.err)}`);
-    //             continue;
-    //         }
-
-    //         const pubkeyToTransferFrom = event.accountAddresses[0];
-
-    //         if (!pubkeyToTransferFrom) {
-    //             console.warn('Webhook event missing accountAddresses. Skipping.');
-    //             continue;
-    //         }
-
-    //         console.log(`Attempting to process transaction for public key: ${pubkeyToTransferFrom}`);
-
-    //         const user = await prisma.user.findFirst({
-    //            where: {
-    //             Pubkey: pubkeyToTransferFrom
-    //            }
-    //         });
-
-    //         if (!user) {
-    //             console.warn(`User with public key ${pubkeyToTransferFrom} not found in database. Skipping transfer.`);
-    //             continue;
-    //         }
-
-    //         try {
-    //             const txid = await transfer(user);
-    //             processedSignatures.push(txid);
-    //             console.log(`Successfully initiated sweep for ${pubkeyToTransferFrom}. TxID: ${txid}`);
-    //         } catch (transferError: any) {
-    //             console.error(`Failed to initiate transfer for ${pubkeyToTransferFrom}: ${transferError.message}`);
-    //         }
-    //     }
-
-    // } catch (error: any) {
-    //     console.error('Error processing Helius webhook:', error);
-    //     return NextResponse.json(
-    //         { error: 'Failed to process webhook payload', details: error.message || 'An unknown error occurred' },
-    //         { status: 500 }
-    //     );
-    // }
+        const postBalance = tx.meta.postBalances[1];
+        const fee = tx.meta.fee;
+        console.log("Post balance of SOL transfer:", postBalance);
+        console.log("Fee of SOL transfer:", fee);
 
     return NextResponse.json(
         { message: 'Webhook payload processed' },
         { status: 200 }
     );
+
+    }catch(error){
+        console.error("Error processing Helius webhook:", error);
+        return NextResponse.json(
+            { error: 'Failed to process webhook payload', details: error || 'An unknown error occurred' },
+            { status: 500 }
+        );
+    }
+
+
 }
 
 async function transfer(user: User): Promise<string> {
     const userId = user.username;
     console.log(`Processing transfer for user: ${userId}`);
 
-    const databaseShare: PartialKey | null = await prisma.partialKey.findFirst({
+    const databaseShare = await prisma.user.findFirst({
         where: {
-            userId: user.id,
+            id: user.id,
         },
         select:{
-            key: true,
+            partialKey: true,
         }
     });
 
@@ -187,7 +119,11 @@ async function transfer(user: User): Promise<string> {
         })
     );
 
-    const signedTransaction = await signTransactionMPC(userId, transaction, databaseShare.key);
+    if(databaseShare.partialKey == null){
+        throw new Error("Database share not found");
+    }
+
+    const signedTransaction = await signTransactionMPC(userId, transaction, databaseShare.partialKey);
     console.log('Transaction signed by MPC wallet.');
 
     const serializedTransaction = signedTransaction.serialize();

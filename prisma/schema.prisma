@@ -21,8 +21,8 @@ model User {
   name           String?
   subId          String
   ProfilePicture String?
+  partialKey     String?
   orders          Order[]
-  PartialSignatures  PartialKey[]
 }
 
 model Order {
@@ -31,13 +31,6 @@ model Order {
   amount         Float
   Signature      String
   paymentStatus  String
-  user           User        @relation(fields: [userId], references: [id])
-}
-
-model PartialKey {
-  id             String      @id @default(uuid())
-  userId         String
-  key            String
   user           User        @relation(fields: [userId], references: [id])
 }
 
